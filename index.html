@@ -73,10 +73,10 @@ THE SOFTWARE.
 
             let startTimeTypeUpdate = function() {
                 if ($("#node-in-startTimeIsNormal").prop('checked')) {
-                    $("#node-in-startTimeSpecial").hide();
+                    $("#node-in-startTimeSpecialGroup").hide();
                     $("#node-in-startTimeNormal").show();
                 } else {
-                    $("#node-in-startTimeSpecial").show();
+                    $("#node-in-startTimeSpecialGroup").show();
                     $("#node-in-startTimeNormal").hide();
                 }
             };
@@ -89,13 +89,19 @@ THE SOFTWARE.
             } else {
                 $("#node-in-startTimeIsSpecial").prop('checked', true);
                 $("#node-in-startTimeSpecial").val(this.startTime);
+                $("#node-in-startTimeSpecialOffset").val(this.startOffset);
             }
             startTimeTypeUpdate($("#node-in-startTimeIsNormal"));
         },
         oneditsave: function() {
-            this.startTime = $("#node-in-startTimeIsNormal").prop('checked') ?
-                             $("#node-in-startTimeNormal").val() :
-                             $("#node-in-startTimeSpecial").val();
+            if($("#node-in-startTimeIsNormal").prop('checked')) {
+                this.startTime = $("#node-in-startTimeNormal").val();
+                this.startOffset = '';
+            } else {
+                this.startTime = $("#node-in-startTimeSpecial").val();
+                this.startOffset = $("#node-in-startTimeSpecialOffset").val();
+            }
+
         }
     });
 </script>
@@ -122,21 +128,26 @@ THE SOFTWARE.
     <div class="form-row">
         <label>Start Time</label>
 
-        <select id="node-in-startTimeSpecial" style="width: 70%">
-            <option value="sunrise">Start of sunrise</option>
-            <option value="sunriseEnd">End of sunrise</option>
-            <option value="goldenHour">Start of morning golden hour</option>
-            <option value="goldenHourEnd">End of morning golden hour</option>
-            <option value="solarNoon">Solar noon</option>
-            <option value="sunsetStart">Start of sunset</option>
-            <option value="sunset">End of sunset</option>
-            <option value="dusk">Dusk</option>
-            <option value="nauticalDusk">Nautical dusk</option>
-            <option value="night">Start of night</option>
-            <option value="nightEnd">End of night</option>
-            <option value="nauticalDawn">Nautical dawn</option>
-            <option value="dawn">Dawn</option>
-        </select>
+        <div id="node-in-startTimeSpecialGroup" style="display: inline">
+            <select id="node-in-startTimeSpecial" style="width: 48%">
+                <option value="sunrise">Start of sunrise</option>
+                <option value="sunriseEnd">End of sunrise</option>
+                <option value="goldenHour">Start of morning golden hour</option>
+                <option value="goldenHourEnd">End of morning golden hour</option>
+                <option value="solarNoon">Solar noon</option>
+                <option value="sunsetStart">Start of sunset</option>
+                <option value="sunset">End of sunset</option>
+                <option value="dusk">Dusk</option>
+                <option value="nauticalDusk">Nautical dusk</option>
+                <option value="night">Start of night</option>
+                <option value="nightEnd">End of night</option>
+                <option value="nauticalDawn">Nautical dawn</option>
+                <option value="dawn">Dawn</option>
+            </select>
+            <span style="display: inline-block; width: 5%; text-align: center;">+</span>
+            <input type="text" id="node-in-startTimeSpecialOffset" style="width: 16%">
+        </div>
+
         <input type="time" id="node-in-startTimeNormal">
 
         <input type="radio" class="radio inline" id="node-in-startTimeIsSpecial" name="node-in-startTimeType" value="special" style="margin-left: 30%; width: 10%">
