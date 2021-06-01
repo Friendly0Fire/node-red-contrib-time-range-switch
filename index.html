@@ -23,6 +23,22 @@ THE SOFTWARE.
 -->
 
 <script type="text/javascript">
+    var specialOptions = [
+        {text: "Start of sunrise", value: "sunrise"},
+        {text: "End of sunrise", value: "sunriseEnd"},
+        {text: "Start of morning golden hour", value: "goldenHour"},
+        {text: "End of morning golden hour", value: "goldenHourEnd"},
+        {text: "Solar noon", value: "solarNoon"},
+        {text: "Start of sunset", value: "sunsetStart"},
+        {text: "End of sunset", value: "sunset"},
+        {text: "Dusk", value: "dusk"},
+        {text: "Nautical dusk", value: "nauticalDusk"},
+        {text: "Start of night", value: "night"},
+        {text: "End of night", value: "nightEnd"},
+        {text: "Nautical dawn", value: "nauticalDawn"},
+        {text: "Dawn", value: "dawn"},
+    ];
+
     RED.nodes.registerType('time-range-switch', {
         category: 'function',
         color: '#f37a33',
@@ -71,7 +87,86 @@ THE SOFTWARE.
                 }
             }
 
-            let startTimeTypeUpdate = function() {
+            var outputCount = $("#node-input-outputs").val("{}");
+
+            $("#node-input-time-container").css('min-height','150px').css('min-width','450px').editableList({
+                addItem: function(container,i,opt) {
+                    if (!opt.hasOwnProperty('s')) {
+                        opt.s = "ti";
+                    }
+                    if (!opt.hasOwnProperty('i')) {
+                        opt._i = Math.floor((0x99999-0x10000)*Math.random()).toString();
+                    }
+
+                    var row = $('<div/>', {class:'node-red-contrib-time-range-switch'}).appendTo(container);
+                    var selectField = $('<select/>',{class:'time-type'}).appendTo(row);
+
+                    $("<option></option>").val("sp").text("Special").appendTo(selectField);
+                    $("<option></option>").val("ti").text("Time").appendTo(selectField);
+
+                    var specialSelect = $('<select/>', {class:'special-time'}).appendTo(row);
+                    for(var idx in specialOptions) {
+                        let o = specialOptions[idx];
+                        $("<option></option>").val(o.value).text(o.text).appendTo(specialSelect);
+                    }
+
+                    var specialOffsetSpan = $("<span/>", {class:'special-time'}).appendTo(row);
+                    specialOffsetSpan.append('+');
+
+                    var specialOffsetInput = $('<input/>',{type:'text',class:'special-time'}).appendTo(row);
+
+                    var timeInput = $('<input/>',{class:'normal-time',type:'time'}).appendTo(row);
+
+                    var finalspan = $('<span/>',{class:'final-span'}).appendTo(row);
+                    finalspan.append(' &#8594; <span class="node-red-contrib-time-range-switch-index">'+(i+1)+'</span> ');
+
+                    selectField.on("change", function() {
+                        var isspecial = selectField.val() === "sp";
+                        if(isspecial) {
+                            specialSelect.show();
+                            specialOffsetSpan.show();
+                            specialOffsetInput.show();
+                            timeInput.hide();
+                        } else {
+                            specialSelect.hide();
+                            specialOffsetSpan.hide();
+                            specialOffsetInput.hide();
+                            timeInput.show();
+                        }
+                    });
+                    selectField.val(opt.s);
+                    selectField.change();
+                },
+                removeItem: function(opt) {
+                    var currentOutputs = JSON.parse(outputCount.val()||"{}");
+                    if (opt.hasOwnProperty('i')) {
+                        currentOutputs[opt.i] = -1;
+                    } else {
+                        delete currentOutputs[opt._i];
+                    }
+                    var rules = $("#node-input-time-container").editableList('items');
+                    rules.each(function(i) {
+                        $(this).find(".node-input-rule-index").html(i+1);
+                        var data = $(this).data('data');
+                        currentOutputs[data.hasOwnProperty('i')?data.i:data._i] = i;
+                    });
+                    outputCount.val(JSON.stringify(currentOutputs));
+                },
+                sortItems: function(rules) {
+                    var currentOutputs = JSON.parse(outputCount.val()||"{}");
+                    var rules = $("#node-input-time-container").editableList('items');
+                    rules.each(function(i) {
+                        $(this).find(".node-input-rule-index").html(i+1);
+                        var data = $(this).data('data');
+                        currentOutputs[data.hasOwnProperty('i')?data.i:data._i] = i;
+                    });
+                    outputCount.val(JSON.stringify(currentOutputs));
+                },
+                sortable: true,
+                removable: true
+            });
+
+            /*let startTimeTypeUpdate = function() {
                 if ($("#node-in-startTimeIsNormal").prop('checked')) {
                     $("#node-in-startTimeSpecialGroup").hide();
                     $("#node-in-startTimeNormal").show();
@@ -91,22 +186,24 @@ THE SOFTWARE.
                 $("#node-in-startTimeSpecial").val(this.startTime);
                 $("#node-in-startTimeSpecialOffset").val(this.startOffset);
             }
-            startTimeTypeUpdate($("#node-in-startTimeIsNormal"));
+            startTimeTypeUpdate($("#node-in-startTimeIsNormal"));*/
         },
         oneditsave: function() {
-            if($("#node-in-startTimeIsNormal").prop('checked')) {
+            /*if($("#node-in-startTimeIsNormal").prop('checked')) {
                 this.startTime = $("#node-in-startTimeNormal").val();
                 this.startOffset = '';
             } else {
                 this.startTime = $("#node-in-startTimeSpecial").val();
                 this.startOffset = $("#node-in-startTimeSpecialOffset").val();
-            }
+            }*/
 
         }
     });
 </script>
 
 <script type="text/x-red" data-template-name="time-range-switch">
+    <link rel="stylesheet" href="resources/node-red-contrib-time-range-switch/style.css">
+
     <div class="form-row">
         <label for="node-input-name">
             <i class="icon-tag"></i> Name</label>
@@ -124,46 +221,14 @@ THE SOFTWARE.
         <input type="text" id="node-input-lon" placeholder="-1.4">
     </div>
 
-    <hr>
-    <div class="form-row">
-        <label>Start Time</label>
-
-        <div id="node-in-startTimeSpecialGroup" style="display: inline">
-            <select id="node-in-startTimeSpecial" style="width: 48%">
-                <option value="sunrise">Start of sunrise</option>
-                <option value="sunriseEnd">End of sunrise</option>
-                <option value="goldenHour">Start of morning golden hour</option>
-                <option value="goldenHourEnd">End of morning golden hour</option>
-                <option value="solarNoon">Solar noon</option>
-                <option value="sunsetStart">Start of sunset</option>
-                <option value="sunset">End of sunset</option>
-                <option value="dusk">Dusk</option>
-                <option value="nauticalDusk">Nautical dusk</option>
-                <option value="night">Start of night</option>
-                <option value="nightEnd">End of night</option>
-                <option value="nauticalDawn">Nautical dawn</option>
-                <option value="dawn">Dawn</option>
-            </select>
-            <span style="display: inline-block; width: 5%; text-align: center;">+</span>
-            <input type="text" id="node-in-startTimeSpecialOffset" style="width: 16%">
-        </div>
-
-        <input type="time" id="node-in-startTimeNormal">
-
-        <input type="radio" class="radio inline" id="node-in-startTimeIsSpecial" name="node-in-startTimeType" value="special" style="margin-left: 30%; width: 10%">
-        <label for="node-in-startTimeIsSpecial"><i class="fa fa-sun-o"></i> Special</label>
-        <input type="radio" class="radio inline" id="node-in-startTimeIsNormal" name="node-in-startTimeType" value="normal" style="width: 10%">
-        <label for="node-in-startTimeIsNormal"><i class="fa fa-clock-o"></i> Time</label>
+    <div class="form-row node-input-time-container-row">
+        <ol id="node-input-time-container"></ol>
     </div>
     <div class="form-row">
-        <label for="node-input-endTime">
-            <i class="icon-tag"></i> End time</label>
-        <input type="text" id="node-input-endTime" placeholder="">
-    </div>
-    <div class="form-row">
-        <label for="node-input-endOffset">
-            <i class="icon-tag"></i> End time offset</label>
-        <input type="text" id="node-input-endOffset" placeholder="">
+        <select id="node-input-checkall" style="width:100%; margin-right:5px;">
+            <option value="true" data-i18n="switch.checkall"></option>
+            <option value="false" data-i18n="switch.stopfirst"></option>
+        </select>
     </div>
 
 </script>

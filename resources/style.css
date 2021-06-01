@@ -1,0 +1,28 @@
+div.node-red-contrib-time-range-switch {
+    display: flex;
+    align-items: baseline;
+}
+
+.node-red-contrib-time-range-switch select.time-type {
+    width: 7em;
+    margin-right: 1em;
+}
+
+.node-red-contrib-time-range-switch select.special-time {
+    width: 12em;
+}
+.node-red-contrib-time-range-switch span.special-time {
+    text-align: center;
+    width: 2em;
+}
+.node-red-contrib-time-range-switch input.special-time {
+    width: 5em;
+}
+
+.node-red-contrib-time-range-switch input.normal-time {
+}
+
+.node-red-contrib-time-range-switch .final-span {
+    width: 3em;
+    margin-left: 1em;
+}
